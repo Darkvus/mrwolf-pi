@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Mr. Wolf - Reservas</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; background: #111; color: #eee; }
+  h1 { color: #e63946; }
+  table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+  th, td { padding: 0.5rem; border-bottom: 1px solid #333; text-align: left; }
+  th { color: #999; }
+  input, button { padding: 0.4rem; margin-right: 0.5rem; }
+  button { background: #e63946; color: white; border: none; cursor: pointer; }
+</style>
+</head>
+<body>
+  <h1>🍕 Mr. Wolf — Panel de reservas</h1>
+  <label>Filtrar por fecha: <input type="date" id="dateFilter"></label>
+  <button onclick="load()">Buscar</button>
+  <table>
+    <thead><tr><th>Hora</th><th>Cliente</th><th>Personas</th><th>Teléfono</th><th>Notas</th><th></th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+<script>
+async function load() {
+  const date = document.getElementById('dateFilter').value;
+  const url = date ? `/bookings?booking_date=${date}` : '/bookings';
+  const res = await fetch(url);
+  const data = await res.json();
+  const rows = document.getElementById('rows');
+  rows.innerHTML = '';
+  data.forEach(b => {
+    rows.innerHTML += `<tr>
+      <td>${b.booking_date} ${b.booking_time}</td>
+      <td>${b.customer_name}</td>
+      <td>${b.party_size ?? '-'}</td>
+      <td>${b.phone ?? '-'}</td>
+      <td>${b.notes ?? ''}</td>
+      <td><button onclick="cancelBooking(${b.id})">Cancelar</button></td>
+    </tr>`;
+  });
+}
+async function cancelBooking(id) {
+  if (!confirm('¿Cancelar esta reserva?')) return;
+  await fetch(`/tools/cancel_reservation/${id}`, { method: 'PATCH' });
+  load();
+}
+load();
+</script>
+</body>
+</html>

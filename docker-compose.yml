@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  api:
+    build: ./local-api
+    container_name: mrwolf-api
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "8000:8000"     # panel/API — publícalo solo dentro de tu red/Tailscale
+    environment:
+      - DATABASE_PATH=/app/data/mrwolf.db
+
+  orchestrator:
+    build: ./orchestrator
+    container_name: mrwolf-orchestrator
+    restart: unless-stopped
+    depends_on:
+      - api
+      - asterisk
+    volumes:
+      - ./models:/app/models
+      - ./prompts:/app/prompts
+    environment:
+      - API_BASE_URL=http://api:8000
+      - ARI_URL=http://asterisk:8088
+      - ARI_USER=orchestrator
+      - ARI_PASS=${ARI_PASS:-changeme}
+      - ARI_APP=mrwolf
+      - LLM_MODEL_PATH=/app/models/qwen2.5-1.5b-instruct-q4_k_m.gguf
+      - WHISPER_MODEL_PATH=/app/models/ggml-small.bin
+      - PIPER_MODEL_PATH=/app/models/es_ES-mls_10246-medium.onnx
+      - TENANT_ID=mrwolf-pizzeria
+    devices:
+      - /dev/snd:/dev/snd   # solo si necesitas audio local de pruebas
+
+  asterisk:
+    build: ./asterisk
+    container_name: mrwolf-asterisk
+    restart: unless-stopped
+    network_mode: host      # necesario para Bluetooth/RFCOMM y ARI simple
+    privileged: true         # requerido para acceso a Bluetooth desde el contenedor
+    volumes:
+      - ./asterisk/config:/etc/asterisk
+      - /var/run/dbus:/var/run/dbus
+    environment:
+      - ARI_PASS=${ARI_PASS:-changeme}
