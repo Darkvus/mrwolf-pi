@@ -30,7 +30,7 @@ services:
       - ARI_APP=mrwolf
       - LLM_MODEL_PATH=/app/models/qwen2.5-1.5b-instruct-q4_k_m.gguf
       - WHISPER_MODEL_PATH=/app/models/ggml-small.bin
-      - PIPER_MODEL_PATH=/app/models/es_ES-mls_10246-medium.onnx
+      - PIPER_MODEL_PATH=/app/models/es_ES-davefx-medium.onnx
       - TENANT_ID=mrwolf-pizzeria
     devices:
       - /dev/snd:/dev/snd   # solo si necesitas audio local de pruebas
