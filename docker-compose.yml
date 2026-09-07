@@ -39,10 +39,11 @@ services:
     build: ./asterisk
     container_name: mrwolf-asterisk
     restart: unless-stopped
-    network_mode: host      # necesario para Bluetooth/RFCOMM y ARI simple
-    privileged: true         # requerido para acceso a Bluetooth desde el contenedor
+    ports:
+      - "5060:5060/udp"        # señalización SIP hacia tu proveedor VoIP
+      - "10000-10100:10000-10100/udp"  # RTP (audio)
+      - "8088:8088"            # ARI (solo accesible en red interna/Tailscale)
     volumes:
       - ./asterisk/config:/etc/asterisk
-      - /var/run/dbus:/var/run/dbus
     environment:
       - ARI_PASS=${ARI_PASS:-changeme}

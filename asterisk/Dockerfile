@@ -14,8 +14,8 @@ RUN wget -q https://downloads.asterisk.org/pub/telephony/asterisk/asterisk-${AST
     contrib/scripts/install_prereq install && \
     ./configure --with-bluetooth && \
     make menuselect.makeopts && \
-    menuselect/menuselect --enable chan_mobile menuselect.makeopts && \
+    menuselect/menuselect --enable chan_mobile --enable res_pjsip --enable chan_pjsip menuselect.makeopts && \
     make -j$(nproc) && make install && make samples && make config
 
-EXPOSE 8088 5038
+EXPOSE 8088 5038 5060/udp
 CMD ["asterisk", "-f", "-vvv"]

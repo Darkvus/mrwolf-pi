@@ -9,7 +9,23 @@ MVP: llamada entrante por Bluetooth desde tu Android con SIM SIMYO → Asterisk 
 - Bluetooth activo (`bluetoothctl`), BlueZ instalado (viene por defecto en Raspberry Pi OS).
 - Tu Android antiguo con la SIM de SIMYO, con **Bluetooth "manos libres" (HFP)** activable — normalmente aparece al emparejar como "dispositivo de coche/altavoz".
 
-## 1. Emparejar el Android por Bluetooth
+## 1. Conectividad: desvío de llamadas SIMYO → SIP (recomendado)
+
+En vez de Bluetooth, este método desvía tu número SIMYO a un número SIP (DID) de un proveedor VoIP (Fonvirtual, Netelip, Sipgate, Voztelecom...), que Asterisk recibe por PJSIP.
+
+1. Contrata un número DID con SIP trunk en tu proveedor VoIP. Apunta `sip_server`, `usuario`, `password` y el número DID asignado.
+2. Rellena `asterisk/config/pjsip.conf` con esos datos (`SIP_SERVER`, `SIP_USER`, `SIP_PASS`).
+3. Desde el Android con la SIM SIMYO, activa el desvío incondicional marcando:
+   ```
+   **21*NUMERODID#
+   ```
+   (formato internacional sin `+`, ej. `0034900123456`). Para desactivarlo: `##21#`.
+   ⚠️ Revisa tu tarifa: el desvío incondicional es una llamada saliente de tu línea SIMYO, puede tener coste por minuto si tu tarifa no incluye llamadas ilimitadas.
+4. En `orchestrator`, define `HUMAN_TRANSFER_NUMBER` con tu móvil en formato que acepte tu proveedor SIP para la transferencia.
+
+### Alternativa: Bluetooth + chan_mobile (PoC sin coste)
+
+Si prefieres probar gratis con el Android por Bluetooth en vez del desvío de llamadas:
 
 ```bash
 bluetoothctl
@@ -22,9 +38,9 @@ trust XX:XX:XX:XX:XX:XX
 connect XX:XX:XX:XX:XX:XX
 ```
 
-En el Android, acepta el emparejamiento y **confirma el perfil "Audio de llamadas / manos libres"** si te lo pregunta (no solo "transferencia de archivos").
+En el Android, activa el toggle **"Llamadas telefónicas"** para el dispositivo emparejado (Ajustes > Bluetooth > dispositivo). Si `connect` falla con `br-connection-profile-unavailable`, prueba a forzar la clase del adaptador antes de emparejar: `sudo hciconfig hci0 class 0x200404`, y vuelve a emparejar desde cero.
 
-Edita `asterisk/config/chan_mobile.conf` y pon esa MAC real en `address=`.
+Edita `asterisk/config/chan_mobile.conf` con esa MAC, y cambia en `extensions.conf` el contexto de entrada de `from-voip` a `from-mobile` en el dialplan que use tu variante.
 
 ## 2. Descargar los modelos (se montan como volumen, no van en la imagen)
 
